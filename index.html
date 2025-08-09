@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Godot Interactive Mini‑Course (Lessons 1–3)</title>
+  <style>
+    :root{
+      --bg:#0f1220; --panel:#161a2f; --muted:#8792a8; --text:#e7ecff; --brand:#7c9cff; --ok:#48e6a4; --warn:#ffd36e; --bad:#ff7a7a;
+      --card:#12162a; --accent:#9bd4ff; --shadow:0 10px 25px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0f1220 0%,#0e1426 100%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;}
+    a{color:var(--accent);text-decoration:none}
+    .layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    nav{background:var(--panel);border-right:1px solid #232746;position:sticky;top:0;height:100vh;padding:18px 14px 24px;overflow:auto}
+    nav .logo{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.2px;margin:2px 0 8px}
+    .spark{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 210deg at 50% 50%,#6cf 0deg,#b9f 120deg,#6f9 240deg,#6cf 360deg);
+           box-shadow:0 0 0 2px #1c2140 inset,0 6px 20px rgba(124,156,255,.35)}
+    .muted{color:var(--muted)}
+    .navsec{margin:16px 0}
+    .navsec h4{margin:14px 8px 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#aab3d6}
+    .navsec a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;color:var(--text)}
+    .navsec a:hover,.navsec a.active{background:#1a1f3a}
+    .pill{font-size:12px;padding:2px 8px;border-radius:999px;background:#1f2547;color:#b7c0eb;margin-left:auto}
+
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #232746;background:#0f142a;position:sticky;top:0;z-index:5}
+    .title{display:flex;flex-direction:column}
+    .title h1{margin:0;font-size:20px}
+    .title p{margin:2px 0 0;color:var(--muted);font-size:13px}
+    .progress{height:10px;background:#1a1f3a;border-radius:999px;overflow:hidden;box-shadow:var(--shadow);display:flex}
+    .progress>span{display:block;height:100%;background:linear-gradient(90deg,#48e6a4,#7c9cff);width:0%}
+
+    main{padding:24px;}
+    .card{background:var(--card);border:1px solid #232746;border-radius:16px;box-shadow:var(--shadow);padding:18px}
+    .grid{display:grid;gap:16px}
+    .grid.cols-2{grid-template-columns:1.2fr 1fr}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+
+    h2{margin:8px 0 14px;font-size:22px}
+    h3{margin:10px 0 8px;font-size:18px}
+    h4{margin:8px 0 8px;font-size:14px;color:#bcd}
+    p{margin:8px 0}
+
+    .btn{appearance:none;border:0;padding:10px 14px;border-radius:12px;background:#22294f;color:var(--text);cursor:pointer;font-weight:600}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.brand{background:linear-gradient(90deg,#6ea8ff,#9bd4ff)}
+    .btn.ghost{background:#12162a;border:1px solid #2a2f55}
+    .tag{font-size:12px;padding:4px 8px;border-radius:999px;background:#1f2547;color:#c6d3ff;display:inline-block;margin-right:6px}
+
+    pre{padding:12px 14px;border:1px solid #2a2f55;background:#0e1224;border-radius:12px;overflow:auto}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px}
+    .codebar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .copy{font-size:12px;padding:4px 8px;background:#1e2447;border:1px solid #2a2f55;border-radius:8px;cursor:pointer}
+
+    /* Scene Tree Playground */
+    .tree-wrap{position:relative;min-height:320px;background:#0d1222;border:1px dashed #2a2f55;border-radius:14px;padding:14px;overflow:hidden}
+    .node{display:inline-flex;align-items:center;gap:8px;background:#151a33;border:1px solid #2a2f55;border-radius:12px;padding:8px 10px;margin:6px;position:relative}
+    .node .type{font-weight:700}
+    .node .add{font-size:11px;padding:2px 8px;border-radius:8px;background:#1f2547;cursor:pointer}
+    .children{margin-left:26px;border-left:1px dashed #36406f;padding-left:8px}
+    .badge{font-size:10px;padding:2px 6px;border-radius:999px;background:#24305f;color:#bcd}
+
+    /* Signals Playground */
+    .signal-area{position:relative;height:320px;background:#0d1222;border:1px dashed #2a2f55;border-radius:14px;overflow:hidden}
+    .nodebox{position:absolute;min-width:110px;padding:10px;border-radius:12px;background:#151a33;border:1px solid #2a2f55;box-shadow:var(--shadow)}
+    .nodebox h5{margin:0 0 6px;font-size:14px}
+    .port{font-size:12px;margin:4px 0;padding:4px 8px;border-radius:8px;background:#1f2547;display:inline-block}
+    svg.wires{position:absolute;inset:0;pointer-events:none}
+    .pulse{stroke-dasharray:6 12;animation:pulse 1.2s linear infinite}
+    @keyframes pulse{to{stroke-dashoffset:18}}
+
+    /* Tween Playground */
+    .tween-area{position:relative;height:280px;background:#0d1222;border:1px dashed #2a2f55;border-radius:14px;overflow:hidden}
+    .box{position:absolute;top:110px;left:20px;width:60px;height:60px;border-radius:12px;background:linear-gradient(120deg,#6ea8ff,#9bd4ff)}
+    .ghost{position:absolute;top:110px;left:420px;width:60px;height:60px;border:2px dashed #42508f;border-radius:12px}
+    .timeline{display:flex;gap:10px;align-items:center}
+    input[type=range]{width:180px}
+
+    .check{display:flex;align-items:center;gap:8px}
+    .check .dot{width:10px;height:10px;border-radius:999px;background:#3a406f;border:1px solid #2a2f55}
+    .check.done .dot{background:var(--ok);border-color:#1f9d6d}
+
+    .foot{margin-top:24px;color:#a4aed6;font-size:12px;text-align:center}
+    .kbd{padding:.1rem .35rem;border:1px solid #394070;border-radius:6px;background:#141938;font-size:12px}
+
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr}
+      nav{position:static;height:auto}
+    }
+      /* Type Picker */
+    .type-picker{position:fixed;z-index:1000;background:#151a33;border:1px solid #2a2f55;border-radius:12px;box-shadow:var(--shadow);padding:8px;display:grid;gap:6px;grid-template-columns:repeat(2,minmax(130px,1fr));max-width:340px}
+    .type-picker .opt{padding:8px 10px;border-radius:10px;background:#1f2547;cursor:pointer;font-size:14px;text-align:left;border:1px solid #2a2f55}
+    .type-picker .opt:hover{filter:brightness(1.1)}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="logo"><div class="spark"></div><div>
+        Godot Interactive Course<br><span class="muted" style="font-size:12px">Lessons 1–3 • Standalone HTML</span>
+      </div></div>
+
+      <div class="navsec">
+        <h4>Lessons</h4>
+        <a href="#l1" class="active"><span>1) Nodes & Scenes</span><span class="pill" id="p1">Theory→Ex→✔</span></a>
+        <a href="#l2"><span>2) Signals</span><span class="pill" id="p2">Theory→Ex→✔</span></a>
+        <a href="#l3"><span>3) Tween & AnimationPlayer</span><span class="pill" id="p3">Theory→Ex→✔</span></a>
+      </div>
+
+      <div class="navsec">
+        <h4>Shortcuts</h4>
+        <div class="muted" style="font-size:13px;line-height:1.8">
+          • Jump sections: <span class="kbd">G</span><br/>
+          • Copy code: click “Copy”<br/>
+          • Reset playgrounds: buttons inside each card
+        </div>
+      </div>
+    </nav>
+
+    <div>
+      <header>
+        <div class="title">
+          <h1>Godot 4: Interactive Mini‑Course</h1>
+          <p>Format per topic: <strong>1) Theory</strong> → <strong>2) Examples</strong> → <strong>3) Exercises</strong>.</p>
+        </div>
+        <div style="min-width:260px">
+          <div class="muted" style="font-size:12px;margin:0 0 6px">Progress</div>
+          <div class="progress"><span id="progbar"></span></div>
+        </div>
+      </header>
+
+      <main>
+        <!-- LESSON 1 -->
+        <section id="l1" class="card" aria-labelledby="l1-title">
+          <h2 id="l1-title">Lesson 1 — Nodes & Scenes</h2>
+          <span class="tag">Theory</span>
+          <div class="grid cols-2">
+            <div>
+              <p>
+                In Godot, <strong>everything is a Node</strong>. Nodes form a <em>tree</em>; a <strong>Scene</strong> is simply a saved sub‑tree that you can instance (reuse) anywhere. Common 2D nodes include <code>Node2D</code>, <code>Sprite2D</code>, and <code>CollisionShape2D</code>. In 3D, you’ll see <code>Node3D</code>, <code>MeshInstance3D</code>, etc.
+              </p>
+              <ul>
+                <li><strong>Composition:</strong> Add child nodes to layer features (sprite, collision, scripts).</li>
+                <li><strong>Reusability:</strong> Pack a node hierarchy into a .tscn, then <em>instance</em> it where needed.</li>
+                <li><strong>Decoupling:</strong> Keep scenes focused (Player, Enemy, UI Panel), then compose them.</li>
+              </ul>
+              <div class="codebar"><h4>Example: Instancing a PackedScene</h4><button class="copy" data-copy="#code-l1-1">Copy</button></div>
+              <pre><code id="code-l1-1"># Godot 4.x (GDScript)
+var EnemyScene: PackedScene = preload("res://Enemy.tscn")
+
+func _spawn_enemy():
+    var enemy = EnemyScene.instantiate()
+    add_child(enemy)
+    enemy.global_position = Vector2(400, 220)
+</code></pre>
+
+              <div class="codebar"><h4>Example: Basic Node Tree</h4><button class="copy" data-copy="#code-l1-2">Copy</button></div>
+              <pre><code id="code-l1-2"># Player scene (Player.tscn)
+# Player (Node2D)
+# ├─ Sprite2D (visual)
+# ├─ CollisionShape2D (physics)
+# └─ Script (Player.gd)
+</code></pre>
+            </div>
+            <div>
+              <h3>Interactive: Build a Scene Tree</h3>
+              <p class="muted">Goal: create <code>Node2D → Sprite2D</code> and <code>CollisionShape2D</code> as children of the root.</p>
+              <div class="tree-wrap" id="treeWrap"></div>
+              <div style="display:flex;gap:10px;margin-top:10px">
+                <button class="btn" id="addChild">Add child to selected</button>
+                <button class="btn ghost" id="addRoot">Reset</button>
+                <div class="check" id="check-l1"><span class="dot"></span> Exercise not complete</div>
+              </div>
+              <p class="muted" style="margin-top:8px">Tip: click a node to select; use “Add child” to attach a node type.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-top:18px">Exercises</h3>
+          <ol>
+            <li>Create a root <code>Node2D</code> if one doesn’t exist.</li>
+            <li>Add a <code>Sprite2D</code> as a child of the root.</li>
+            <li>Add a <code>CollisionShape2D</code> as a child of the root.</li>
+          </ol>
+        </section>
+
+        <!-- LESSON 2 -->
+        <section id="l2" class="card" aria-labelledby="l2-title" style="margin-top:18px">
+          <h2 id="l2-title">Lesson 2 — Signals</h2>
+          <span class="tag">Theory</span>
+          <div class="grid cols-2">
+            <div>
+              <p>
+                <strong>Signals</strong> let nodes notify others without tight coupling. A Button emits <code>pressed</code>; your script connects it to a function. You can also define <em>custom</em> signals for your game logic.
+              </p>
+              <ul>
+                <li><strong>Emit:</strong> A node triggers a signal event.</li>
+                <li><strong>Connect:</strong> Another node listens and runs a callback.</li>
+                <li><strong>Loosely‑coupled:</strong> Nodes don’t need to know details about each other.</li>
+              </ul>
+              <div class="codebar"><h4>Example: Connect a built‑in signal</h4><button class="copy" data-copy="#code-l2-1">Copy</button></div>
+              <pre><code id="code-l2-1"># Godot 4.x (GDScript)
+@onready var button: Button = $Button
+@onready var label: Label = $Label
+
+func _ready():
+    button.pressed.connect(_on_button_pressed)
+
+func _on_button_pressed():
+    label.text = "Pressed!"
+    label.modulate = Color.CORNFLOWER_BLUE
+</code></pre>
+
+              <div class="codebar"><h4>Example: Custom signal</h4><button class="copy" data-copy="#code-l2-2">Copy</button></div>
+              <pre><code id="code-l2-2">signal health_changed(new_value: int)
+var health := 100
+
+func damage(amount: int) -> void:
+    health = max(0, health - amount)
+    emit_signal("health_changed", health)
+</code></pre>
+            </div>
+            <div>
+              <h3>Interactive: Wire a Signal</h3>
+              <p class="muted">Goal: connect Button <code>pressed</code> → Label <code>set_text("Pressed!")</code>. Then click Emit.</p>
+              <div class="signal-area" id="sigArea">
+                <svg class="wires" id="wires" viewBox="0 0 800 400"></svg>
+                <div class="nodebox" id="btnBox" style="left:28px;top:26px">
+                  <h5>Button</h5>
+                  <div class="port">signal: <code>pressed</code></div>
+                  <button class="btn" id="emitBtn">Emit</button>
+                </div>
+                <div class="nodebox" id="labelBox" style="right:26px;bottom:26px">
+                  <h5>Label</h5>
+                  <div class="port">method: <code>set_text()</code></div>
+                  <div class="port" id="labelPreview">text: <em>(empty)</em></div>
+                </div>
+                <div class="nodebox" id="connectBox" style="left:50%;top:50%;transform:translate(-50%,-50%)">
+                  <h5>Connection</h5>
+                  <button class="btn" id="connect">Connect pressed → set_text</button>
+                  <button class="btn ghost" id="resetSig" style="margin-left:6px">Reset</button>
+                </div>
+              </div>
+              <div class="check" id="check-l2" style="margin-top:10px"><span class="dot"></span> Exercise not complete</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:18px">Exercises</h3>
+          <ol>
+            <li>Connect the Button’s <code>pressed</code> signal to a function that updates the Label text.</li>
+            <li>Test by pressing <strong>Emit</strong>; the wire should pulse and the label should change.</li>
+          </ol>
+        </section>
+
+        <!-- LESSON 3 -->
+        <section id="l3" class="card" aria-labelledby="l3-title" style="margin-top:18px">
+          <h2 id="l3-title">Lesson 3 — Tween & AnimationPlayer</h2>
+          <span class="tag">Theory</span>
+          <div class="grid cols-2">
+            <div>
+              <p>
+                Use <strong>Tween</strong> for code‑driven, time‑based changes (position, rotation, opacity). Use <strong>AnimationPlayer</strong> for keyframed multi‑track animations.
+              </p>
+              <ul>
+                <li><strong>Tween:</strong> quick and dynamic effects via <code>create_tween()</code>.</li>
+                <li><strong>AnimationPlayer:</strong> reusable, editable timelines with multiple properties.</li>
+              </ul>
+              <div class="codebar"><h4>Example: Tween a sprite</h4><button class="copy" data-copy="#code-l3-1">Copy</button></div>
+              <pre><code id="code-l3-1"># Godot 4.x (GDScript)
+@onready var sprite: Sprite2D = $Sprite2D
+
+func dash_right():
+    var tw := get_tree().create_tween()
+    tw.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+    tw.tween_property(sprite, "position:x", sprite.position.x + 400.0, 1.5)
+</code></pre>
+
+              <div class="codebar"><h4>Example: AnimationPlayer (keyframes)</h4><button class="copy" data-copy="#code-l3-2">Copy</button></div>
+              <pre><code id="code-l3-2"># Tracks: position, rotation_degrees, modulate:a
+# 0s   → x=0,   rot=0°,  alpha=1
+# 0.75 → x=200, rot=10°, alpha=0.6
+# 1.5s → x=400, rot=0°,  alpha=1
+
+# (Use the Animation panel to add tracks and keyframes visually)
+</code></pre>
+            </div>
+            <div>
+              <h3>Interactive: Tween Playground</h3>
+              <p class="muted">Goal: move the box to the ghost box in ≤ 1.5s using ease‑in‑out, then mark complete.</p>
+              <div class="tween-area" id="tweenArea">
+                <div class="box" id="box"></div>
+                <div class="ghost" aria-hidden="true"></div>
+              </div>
+              <div class="timeline" style="margin-top:10px">
+                <label>Duration (s) <input id="dur" type="range" min="0.4" max="2.5" step="0.1" value="1.5"/></label>
+                <label>Easing
+                  <select id="ease">
+                    <option value="ease-in-out">ease-in-out</option>
+                    <option value="linear">linear</option>
+                    <option value="ease-in">ease-in</option>
+                    <option value="ease-out">ease-out</option>
+                  </select>
+                </label>
+                <button class="btn" id="runTween">Run</button>
+                <button class="btn ghost" id="resetTween">Reset</button>
+              </div>
+              <div class="check" id="check-l3" style="margin-top:10px"><span class="dot"></span> Exercise not complete</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:18px">Exercises</h3>
+          <ol>
+            <li>Set easing to <code>ease-in-out</code> and duration ≤ <code>1.5s</code>.</li>
+            <li>Run the tween so the box reaches the dashed target.</li>
+          </ol>
+        </section>
+
+        <div class="foot">Tip: Press <span class="kbd">G</span> to open a quick lesson jumper. Progress is saved locally in your browser.</div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ---- Utility: copy code blocks ----
+    document.querySelectorAll('.copy').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const sel = btn.getAttribute('data-copy');
+        const el = document.querySelector(sel);
+        if(!el) return;
+        navigator.clipboard.writeText(el.textContent).then(()=>{
+          const prev = btn.textContent; btn.textContent = 'Copied!';
+          setTimeout(()=>btn.textContent=prev,1000);
+        });
+      });
+    });
+
+    // ---- Quick Nav Active State + G to jump ----
+    function setActiveLink(){
+      const hash = location.hash || '#l1';
+      document.querySelectorAll('nav .navsec a').forEach(a=>a.classList.remove('active'));
+      const link = Array.from(document.querySelectorAll('nav a')).find(a=>a.getAttribute('href')===hash);
+      if(link) link.classList.add('active');
+    }
+    window.addEventListener('hashchange', setActiveLink); setActiveLink();
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='g'){
+        e.preventDefault();
+        const dest = prompt('Jump to: 1 = Nodes, 2 = Signals, 3 = Tween');
+        if(dest==='1') location.hash = '#l1';
+        if(dest==='2') location.hash = '#l2';
+        if(dest==='3') location.hash = '#l3';
+      }
+    });
+
+    // ---- Progress persistence ----
+    const progress = JSON.parse(localStorage.getItem('godotCourseProgress')||'{}');
+    function markDone(key, done){
+      progress[key] = !!done; localStorage.setItem('godotCourseProgress', JSON.stringify(progress));
+      renderChecks();
+    }
+    function renderChecks(){
+      const done1 = !!progress.l1, done2 = !!progress.l2, done3 = !!progress.l3;
+      const pct = Math.round(((done1+done2+done3)/3)*100);
+      document.querySelector('#progbar').style.width = pct+'%';
+      const c1 = document.querySelector('#check-l1'), c2 = document.querySelector('#check-l2'), c3 = document.querySelector('#check-l3');
+      c1.classList.toggle('done', done1); c1.lastChild.nodeValue = done1?' Exercise complete':' Exercise not complete';
+      c2.classList.toggle('done', done2); c2.lastChild.nodeValue = done2?' Exercise complete':' Exercise not complete';
+      c3.classList.toggle('done', done3); c3.lastChild.nodeValue = done3?' Exercise complete':' Exercise not complete';
+      document.querySelector('#p1').textContent = done1?'✔ Done':'Theory→Ex→✔';
+      document.querySelector('#p2').textContent = done2?'✔ Done':'Theory→Ex→✔';
+      document.querySelector('#p3').textContent = done3?'✔ Done':'Theory→Ex→✔';
+    }
+    renderChecks();
+
+    // ---- LESSON 1: Scene Tree Playground ----
+    const treeWrap = document.getElementById('treeWrap');
+    const addChildBtn = document.getElementById('addChild');
+    const addRootBtn = document.getElementById('addRoot');
+
+    let root = null, selectedNode = null;
+
+    function makeNode(type){
+      return { id: Math.random().toString(36).slice(2,8), type, children: [] };
+    }
+    function resetTree(){ root = makeNode('Node2D'); selectedNode = root; renderTree(); }
+
+    function renderTree(){
+      treeWrap.innerHTML = '';
+      if(!root){
+        const empty = document.createElement('div');
+        empty.className = 'muted';
+        empty.innerHTML = 'No root. Click <b>Reset</b> to create a <code>Node2D</code> root.';
+        treeWrap.appendChild(empty); return;
+      }
+      const treeDom = buildNodeDom(root);
+      treeWrap.appendChild(treeDom);
+      validateL1();
+    }
+
+    function buildNodeDom(node){
+      const el = document.createElement('div'); el.className='node'; el.tabIndex=0;
+      el.dataset.id = node.id; if(selectedNode && node.id===selectedNode.id){ el.style.outline='2px solid var(--brand)'; }
+      const type = document.createElement('span'); type.className='type'; type.textContent=node.type;
+      const badge = document.createElement('span'); badge.className='badge'; badge.textContent = node.children.length+' child'+(node.children.length===1?'':'ren');
+      const add = document.createElement('span'); add.className='add'; add.textContent = '+ add'; add.title='Add child';
+      add.addEventListener('click', (e)=>{ e.stopPropagation(); addChildTo(node, add); });
+      el.append(type,badge,add);
+      el.addEventListener('click', ()=>{ selectedNode=node; renderTree(); });
+
+      if(node.children.length){
+        const children = document.createElement('div'); children.className='children';
+        node.children.forEach(ch=>children.appendChild(buildNodeDom(ch)));
+        el.appendChild(children);
+      }
+      return el;
+    }
+
+    let pickerEl = null;
+    function closePicker(){ if(pickerEl){ pickerEl.remove(); pickerEl=null; document.removeEventListener('click', onDocClick, true);} }
+    function onDocClick(e){ if(pickerEl && !pickerEl.contains(e.target)) closePicker(); }
+    function showTypePicker(parent, anchorEl){
+      closePicker();
+      pickerEl = document.createElement('div');
+      pickerEl.className = 'type-picker';
+      const types=['Sprite2D','CollisionShape2D','Node2D','Label','Timer'];
+      types.forEach(t=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=t; b.addEventListener('click',()=>{ parent.children.push(makeNode(t)); renderTree(); closePicker(); }); pickerEl.appendChild(b); });
+      const custom=document.createElement('button'); custom.type='button'; custom.className='opt'; custom.textContent='Custom…'; custom.addEventListener('click',()=>{ const t=prompt('Enter custom node type'); if(t){ parent.children.push(makeNode(t.trim())); renderTree(); } closePicker(); }); pickerEl.appendChild(custom);
+      document.body.appendChild(pickerEl);
+      const r = anchorEl.getBoundingClientRect();
+      pickerEl.style.left = Math.round(r.left) + 'px';
+      pickerEl.style.top  = Math.round(r.bottom + 6) + 'px';
+      setTimeout(()=>document.addEventListener('click', onDocClick, true),0);
+    }
+    function addChildTo(parent, anchorEl){ showTypePicker(parent, anchorEl); }
+
+    addChildBtn.addEventListener('click',(e)=>{
+      if(!root){ resetTree(); return; }
+      if(!selectedNode){ alert('Select a node first (click it).'); return; }
+      addChildTo(selectedNode, addChildBtn);
+    });
+    addRootBtn.addEventListener('click',()=>{ resetTree(); });
+
+    function validateL1(){
+      if(!root || root.type!=='Node2D'){ markDone('l1', false); return; }
+      const types = root.children.map(c=>c.type).sort().join(',');
+      const ok = types.includes('Sprite2D') && types.includes('CollisionShape2D');
+      markDone('l1', !!ok);
+    }
+
+    resetTree();
+
+    // ---- LESSON 2: Signals Playground ----
+    const wires = document.getElementById('wires');
+    const btnBox = document.getElementById('btnBox');
+    const labelBox = document.getElementById('labelBox');
+    const connectBtn = document.getElementById('connect');
+    const emitBtn = document.getElementById('emitBtn');
+    const resetSig = document.getElementById('resetSig');
+    const labelPreview = document.getElementById('labelPreview');
+
+    let connectionMade = false;
+
+    function bbox(el){ return el.getBoundingClientRect(); }
+    function lineBetween(a,b){
+      const aw = bbox(a), bw = bbox(b), svg = wires.getBoundingClientRect();
+      const x1 = (aw.left + aw.right)/2 - svg.left,
+            y1 = (aw.top + aw.bottom)/2 - svg.top,
+            x2 = (bw.left + bw.right)/2 - svg.left,
+            y2 = (bw.top + bw.bottom)/2 - svg.top;
+      let path = `M ${x1} ${y1} C ${x1+120} ${y1} ${x2-120} ${y2} ${x2} ${y2}`;
+      let p = document.getElementById('wire');
+      if(!p){ p = document.createElementNS('http://www.w3.org/2000/svg','path'); p.id='wire'; p.setAttribute('fill','none'); p.setAttribute('stroke','#6ea8ff'); p.setAttribute('stroke-width','3'); wires.appendChild(p); }
+      p.setAttribute('d', path);
+      p.classList.toggle('pulse', connectionMade);
+    }
+    function updateWire(){ lineBetween(btnBox, labelBox); }
+    window.addEventListener('resize', updateWire); updateWire();
+
+    connectBtn.addEventListener('click',()=>{
+      connectionMade = true; updateWire(); markDone('l2', false);
+      connectBtn.textContent = 'Connected ✓';
+    });
+
+    emitBtn.addEventListener('click',()=>{
+      if(!connectionMade){ alert('Connect the signal first.'); return; }
+      // pulse effect already active; update label
+      labelPreview.innerHTML = 'text: <strong>Pressed!</strong>';
+      markDone('l2', true);
+    });
+
+    resetSig.addEventListener('click',()=>{
+      connectionMade = false; labelPreview.innerHTML = 'text: <em>(empty)</em>';
+      connectBtn.textContent = 'Connect pressed → set_text';
+      updateWire(); markDone('l2', false);
+    });
+
+    // ---- LESSON 3: Tween Playground ----
+    const box = document.getElementById('box');
+    const dur = document.getElementById('dur');
+    const ease = document.getElementById('ease');
+    const runTween = document.getElementById('runTween');
+    const resetTween = document.getElementById('resetTween');
+
+    let running = false;
+
+    function resetBox(){
+      running=false; box.style.transition='none';
+      box.style.left='20px'; box.style.top='110px'; box.style.opacity='1';
+      setTimeout(()=>{ box.style.transition=''; },10);
+      markDone('l3', false);
+    }
+
+    runTween.addEventListener('click',()=>{
+      const d = parseFloat(dur.value);
+      const e = ease.value;
+      box.style.transition = `left ${d}s ${e}`;
+      running = true;
+      requestAnimationFrame(()=>{
+        box.style.left = '420px';
+      });
+      setTimeout(()=>{
+        // after move, validate
+        const ok = (e==='ease-in-out' && d <= 1.5);
+        markDone('l3', ok);
+      }, (parseFloat(dur.value)*1000)+60);
+    });
+
+    resetTween.addEventListener('click', resetBox);
+    resetBox();
+  </script>
+</body>
+</html>
